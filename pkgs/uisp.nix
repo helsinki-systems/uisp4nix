@@ -34,7 +34,7 @@ let
     src = unmsServerSrc;
     packageJSON = "${src}/package.json";
     yarnLock = "${src}/yarn.lock";
-    yarnNix = ./yarn.nix;
+    yarnNix = ./uisp-yarn.nix;
     yarnFlags = yarn2nix-moretea.defaultYarnFlags ++ [ "--production" ];
 
     pkgConfig = let
