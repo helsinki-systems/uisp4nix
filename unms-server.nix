@@ -1,4 +1,4 @@
-{ stdenv, stdenvNoCC, fetchurl, dockerTools, nodejs, nodePackages, python, yarn, yarn2nix, writeTextFile, pkgconfig, vips }:
+{ stdenv, stdenvNoCC, fetchurl, dockerTools, nodejs, nodePackages, python, yarn, yarn2nix-moretea, writeTextFile, pkgconfig, vips }:
 
 let
   # nix run nixpkgs.skopeo -c skopeo --override-os linux --override-arch x86_64 inspect docker://docker.io/ubnt/unms:1.0.0-dev.15 | jq -r '.Digest'
@@ -38,11 +38,11 @@ let
     sha256 = "0bjnkf6xmpzwzd02x8y56165flnigriazi455azvydi80xlyx5wy";
   };
 
-  unms-server = yarn2nix.mkYarnPackage rec {
+  unms-server = yarn2nix-moretea.mkYarnPackage rec {
     src = unmsServerSrc;
     packageJSON = ./package.json;
     yarnLock = ./yarn.lock;
-    yarnFlags = yarn2nix.defaultYarnFlags ++ [ "--production" ];
+    yarnFlags = yarn2nix-moretea.defaultYarnFlags ++ [ "--production" ];
 
     pkgConfig = {
       bcrypt = {
