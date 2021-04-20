@@ -3,49 +3,42 @@
 with lib;
 
 let
-  cfg = config.services.unms;
-  unms = pkgs.callPackage ./default.nix {};
-
+  cfg = config.services.uisp;
+  unms = pkgs.callPackage ../pkgs/uisp.nix { };
 in {
   options = {
-    services.unms = {
-      enable = mkEnableOption "Ubiquiti Network Management System";
+    services.uisp = {
+      enable = mkEnableOption "Ubiquiti ISP";
 
       package = mkOption {
         default = unms.unms-server;
         type = types.package;
         description = ''
-          UNMS server package to use.
+          UISP server package to use.
         '';
       };
 
-      reporting = mkOption {
-        default = false;
-        type = types.bool;
-        description = ''
-          Enable analytics reporting.
-        '';
-      };
+      reporting = mkEnableOption "analytics reporting";
 
       httpPort = mkOption {
-        default = 80;
-        type = types.int;
+        default = 8089;
+        type = types.port;
         description = "
           HTTP port on which to listen.
         ";
       };
 
       httpsPort = mkOption {
-        default = 443;
-        type = types.int;
+        default = 8444;
+        type = types.port;
         description = "
           HTTPS port on which to listen.
         ";
       };
 
       wsPort = mkOption {
-        default = 443;
-        type = types.int;
+        default = 8445;
+        type = types.port;
         description = "
           Websocket port on which to listen for API requests.
         ";
@@ -53,7 +46,7 @@ in {
 
       publicHttpPort = mkOption {
         default = 80;
-        type = types.int;
+        type = types.port;
         description = "
           HTTP port to expose, e.g. if running behind a reverse proxy.
         ";
@@ -61,7 +54,7 @@ in {
 
       publicHttpsPort = mkOption {
         default = 443;
-        type = types.int;
+        type = types.port;
         description = "
           HTTPS port to expose, e.g. if running behind a reverse proxy.
         ";
@@ -69,7 +62,7 @@ in {
 
       publicWsPort = mkOption {
         default = 443;
-        type = types.int;
+        type = types.port;
         description = "
           Websocket API port to expose, e.g. if running behind a reverse proxy.
         ";
@@ -77,14 +70,14 @@ in {
 
       netflowPort = mkOption {
         default = 2205;
-        type = types.int;
+        type = types.port;
         description = "
           Netflow port on which to listen.
         ";
       };
 
-      secureLinkSecret = mkOption {
-        default = "enigma";
+      secureLinkSecretFile = mkOption {
+        default = "/var/lib/secrets/unms/secure_link_secret";
         type = types.str;
         description = "
           Unique secret used to authenticate API requests.
@@ -102,7 +95,7 @@ in {
 
         port = mkOption {
           default = 6379;
-          type = types.int;
+          type = types.port;
           description = "
             Redis server port.
           ";
@@ -110,7 +103,7 @@ in {
 
         db = mkOption {
           default = 0;
-          type = types.int;
+          type = types.port;
           description = "
             Redis database ID.
           ";
@@ -128,7 +121,7 @@ in {
 
         port = mkOption {
           default = 24224;
-          type = types.int;
+          type = types.port;
           description = "
             Fluentd server port.
           ";
@@ -146,7 +139,7 @@ in {
 
         port = mkOption {
           default = 5432;
-          type = types.int;
+          type = types.port;
           description = "
             PostgreSQL server port.
           ";
@@ -161,22 +154,11 @@ in {
         };
 
         user = mkOption {
-          default = "postgres";
+          default = "unms";
           type = types.str;
           description = "
             PostgreSQL server user.
           ";
-        };
-
-        password = mkOption {
-          default = "";
-          type = types.str;
-          description = ''
-            PostgreSQL server password.
-
-            Warning: this is stored in cleartext in the Nix store!
-            Use <option>postgres.passwordFile</option> instead.
-          '';
         };
 
         passwordFile = mkOption {
@@ -188,7 +170,7 @@ in {
         };
 
         schema = mkOption {
-          default = "public";
+          default = "unms";
           type = types.str;
           description = "
             PostgreSQL database schema.
@@ -207,7 +189,7 @@ in {
 
         port = mkOption {
           default = 5672;
-          type = types.int;
+          type = types.port;
           description = "
             RabbitMQ server port.
           ";
@@ -218,7 +200,13 @@ in {
 
   config = mkIf cfg.enable {
 
-    systemd.services.unms = rec {
+    systemd.services.unms = let
+      exportSecrets = ''
+        export UNMS_PG_PASSWORD=$(cat ${cfg.postgres.passwordFile})
+        export UNMS_TOKEN=$(cat /var/lib/secrets/unms/token)
+        export SECURE_LINK_SECRET=$(cat ${cfg.secureLinkSecretFile})
+      '';
+    in rec {
       description = "Ubiquiti Network Management System";
       wantedBy = [ "multi-user.target" ];
       after = [ "network.target" ];
@@ -242,11 +230,9 @@ in {
           UNMS_PG_HOST = cfg.postgres.host;
           UNMS_PG_PORT = toString cfg.postgres.port;
           UNMS_PG_USER = cfg.postgres.user;
-          UNMS_PG_PASSWORD = cfg.postgres.password; # TODO
           UNMS_PG_SCHEMA = cfg.postgres.schema;
           UNMS_RABBITMQ_HOST = cfg.rabbitmq.host;
           UNMS_RABBITMQ_PORT = toString cfg.rabbitmq.port;
-          SECURE_LINK_SECRET = cfg.secureLinkSecret;
           NODE_ENV = "production";
         }
 
@@ -289,14 +275,12 @@ in {
             ln -s "${from}" "${to}"
           '';
 
-          waitForHost = { host, port, ... }: name: ''
+          waitForHost = { host, port, ... }: name: optionalString (!strings.hasPrefix "/" host) ''
             echo "Waiting for ${name} host"
             while ! ${pkgs.netcat}/bin/nc -z "${host}" "${toString port}"; do sleep 1; done
           '';
 
         in ''
-          env | sort
-
           echo "Populating app runtime"
           ${pkgs.xorg.lndir}/bin/lndir -silent "${cfg.package}/libexec/unms-server/deps/unms-server"
 
@@ -307,26 +291,30 @@ in {
           ${waitForHost cfg.rabbitmq "RabbitMQ"}
           ${waitForHost cfg.redis "Redis"}
 
-          # trigger rewrite of Redis AOF file (see https://groups.google.com/forum/#!topic/redis-db/4p9ZvwS0NjQ)
-          ${pkgs.redis}/bin/redis-cli -h '${cfg.redis.host}' -p '${toString cfg.redis.port}' BGREWRITEAOF
+          ${exportSecrets}
+          exec ${pkgs.nodejs}/bin/node ${cfg.package}/libexec/unms-server/node_modules/unms-server/cli/migrate.js up
         '';
 
       script = ''
-        PATH="/run/${serviceConfig.RuntimeDirectory}/node_modules/.bin:$PATH" ${cfg.package}/bin/unms
+        ${exportSecrets}
+        exec ${pkgs.nodejs}/bin/node ${cfg.package}/libexec/unms-server/node_modules/unms-server/index.js
       '';
 
       serviceConfig = rec {
-        AmbientCapabilities = "CAP_NET_BIND_SERVICE CAP_NET_RAW";
-        DynamicUser = true;
+        # AmbientCapabilities = "CAP_NET_RAW";
+        User = "unms";
         RuntimeDirectory = StateDirectory;
+        RuntimeDirectoryMode = "0700";
         RuntimeDirectoryPreserve = true;
         StateDirectory = "unms";
         WorkingDirectory = "%t/unms";
       };
-
-      unitConfig = {
-        AssertCapability = "CAP_NET_RAW";
-      };
     };
+
+    users.users.unms = {
+      isSystemUser = true;
+      group = "unms";
+    };
+    users.groups.unms = {};
   };
 }

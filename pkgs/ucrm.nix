@@ -39,6 +39,7 @@ let
       '';
     }}/layer.tar -C $out
 
+    # general patching of paths
     patchShebangs $out
     find $out/scripts -type f -exec sed -i "s_/usr/src/ucrm_''${out}_g" {} +
     find $out -type f -and '(' -name '*.sh' -or -name '*.php' ')' -exec sed -i "s_/data/log/ucrm_/var/log/ucrm_g" {} +
