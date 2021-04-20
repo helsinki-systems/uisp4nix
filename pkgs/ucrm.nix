@@ -37,16 +37,27 @@ let
       '';
     }}/layer.tar -C $out
 
+    # general patching of paths
     patchShebangs $out
     find $out/scripts -type f -exec sed -i "s_/usr/src/ucrm_''${out}_g" {} +
     find $out -type f -and '(' -name '*.sh' -or -name '*.php' ')' -exec sed -i "s_/data/log/ucrm_/var/log/ucrm_g" {} +
     find $out -type f -and '(' -name '*.sh' -or -name '*.php' -or -name '*.yml' ')' -exec sed -i "s_/data/ucrm_/var/lib/ucrm_g" {} +
+
+    # data
     rmdir $out/app/data
     ln -s /var/lib/ucrm/data $out/app/data
     mv $out/app/config/parameters.yml{,.orig}
     ln -s /run/ucrm/parameters.yml $out/app/config/parameters.yml
     sed -i "s_''${out}/app/config/parameters.yml_/run/ucrm/parameters.yml_g" $out/scripts/parameters.sh
     sed -i "s|^NODE_AUTH_KEY|#NODE_AUTH_KEY|" $out/scripts/parameters.sh
+
+    # cache
+    rm -rf $out/app/cache
+    ln -s /var/cache/ucrm $_
+
+    # logs
+    rm -rf $out/app/logs
+    ln -s /var/log/ucrm $_
   '';
 
   # TODO: composer2nix & yarn2nix
