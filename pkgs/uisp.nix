@@ -1,4 +1,4 @@
-{ stdenv, stdenvNoCC, runCommandNoCC, fetchurl, dockerTools, nodejs, nodePackages, python3, yarn, yarn2nix-moretea, writeTextFile, pkgconfig, vips }:
+{ stdenv, stdenvNoCC, runCommandNoCC, fetchurl, dockerTools, nodejs, nodePackages, python3, yarn, yarn2nix-moretea, writeTextFile, pkgconfig, vips, pkgs }:
 
 let
   # nix run nixpkgs.skopeo -c skopeo --override-os linux --override-arch x86_64 inspect docker://docker.io/ubnt/unms:1.3.10 | jq -r '.Digest'
@@ -28,9 +28,15 @@ let
         shopt -u extglob
       '';
     }}/layer.tar -C $out
+
+    rm -r $out/data
+    ln -s /var/lib/unms $out/data
+    ln -s /var/lib/unms/firmwares $out/public/firmwares
+    ln -s /var/lib/unms/images $out/public/images
   '';
 
   unms-server = yarn2nix-moretea.mkYarnPackage rec {
+    inherit version;
     src = unmsServerSrc;
     packageJSON = "${src}/package.json";
     yarnLock = "${src}/yarn.lock";
@@ -47,10 +53,13 @@ let
     in {
       heapdump = nodeGypRebuildPkg;
       raw-socket = nodeGypRebuildPkg;
+      bcrypt = nodeGypRebuildPkg // {
+        buildInputs = nodeGypRebuildPkg.buildInputs ++ [ nodePackages.node-pre-gyp ];
+        postInstall = ''
+          node-pre-gyp rebuild --nodedir="${nodejs}"
+        '';
+      };
       sharp = {
-        bcrypt = nodeGypRebuildPkg // {
-          buildInputs = nodeGypRebuildPkg.buildInputs ++ [ nodePackages.node-pre-gyp ];
-        };
         buildInputs = nodeGypRebuildPkg.buildInputs ++ [ pkgconfig vips ] ++ vips.buildInputs;
         postInstall = ''
           ${nodeGypRebuildPkg.postInstall}
