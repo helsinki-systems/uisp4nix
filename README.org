@@ -1,3 +1,5 @@
+This Readme is out of date. Maybe it will be updated eventually.
+
 * UNMS for Nix and NixOS
 
 This repo contains a Nix derivation for the Ubiquiti Network Management System
