@@ -327,10 +327,40 @@ in {
       };
     };
 
+    systemd.services.siridb = let
+      libcleri = pkgs.callPackage ../pkgs/libcleri {};
+      siridb = pkgs.callPackage ../pkgs/siridb { inherit libcleri; };
+    in {
+      serviceConfig = {
+        ExecStart = "${siridb}/bin/siridb-server";
+        User = "siridb";
+        Group = "siridb";
+        StateDirectory = "siridb";
+        PrivateNetwork = false;
+      };
+      wantedBy = [ "multi-user.target" ];
+
+      sandbox = 2;
+      apparmor = {
+        enable = true;
+        extraConfig = ''
+          network tcp,
+        '';
+      };
+    };
+
     users.users.unms = {
       isSystemUser = true;
       group = "unms";
     };
     users.groups.unms = {};
+
+    users.users.siridb = {
+      isSystemUser = true;
+      createHome = true;
+      group = "siridb";
+      home = "/var/lib/siridb";
+    };
+    users.groups.siridb = {};
   };
 }
