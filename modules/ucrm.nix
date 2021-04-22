@@ -97,6 +97,17 @@ in {
       export PGPASSWORD="$POSTGRES_PASSWORD"
       export UNMS_TOKEN=$(cat /var/lib/secrets/unms/token)
     '';
+
+    sharedAaRules = ''
+      ${cfg.package}/vendor/symfony/cache/Adapter/** w,
+
+      network tcp,
+      deny network udp,
+      deny network netlink raw,
+
+      /var/lib/secrets/ucrm/* r,
+      /var/lib/secrets/unms/* r,
+    '';
   in {
     systemd.services.ucrm-init = {
       description = "Ubiquiti CRM";
@@ -177,6 +188,13 @@ in {
         RuntimeDirectoryMode = "700";
         RuntimeDirectoryPreserve = true;
         StateDirectory = [ "ucrm/uploads" "ucrm/data/ticketing/attachments" "ucrm/sessions" ];
+        PrivateNetwork = false;
+      };
+
+      sandbox = 2;
+      apparmor = {
+        enable = true;
+        extraConfig = sharedAaRules;
       };
     };
 
@@ -186,11 +204,9 @@ in {
       apparmor = {
         enable = true;
         extraConfig = ''
+          ${sharedAaRules}
           unix (create,getattr,getopt,setopt,shutdown),
           /run/ucrm/parameters.yml r,
-          /var/lib/secrets/ucrm/* r,
-          /var/lib/secrets/unms/* r,
-          network tcp,
         '';
       };
 

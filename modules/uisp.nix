@@ -308,6 +308,22 @@ in {
         RuntimeDirectoryPreserve = true;
         StateDirectory = "unms";
         WorkingDirectory = "%t/unms";
+        PrivateNetwork = false;
+      };
+
+      sandbox = 2;
+      apparmor = {
+        enable = true;
+        extraConfig = ''
+          network tcp,
+          network udp,
+          deny network netlink raw,
+
+          @{PROC}@{pid}/stat r,
+          @{PROC}/loadavg r
+
+          /var/lib/secrets/unms/* r,
+        '';
       };
     };
 
