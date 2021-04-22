@@ -320,7 +320,7 @@ in {
           deny network netlink raw,
 
           @{PROC}@{pid}/stat r,
-          @{PROC}/loadavg r
+          @{PROC}/loadavg r,
 
           /var/lib/secrets/unms/* r,
         '';
