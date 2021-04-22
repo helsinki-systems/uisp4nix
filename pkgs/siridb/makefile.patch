@@ -1,0 +1,15 @@
+diff --git a/makefile.targets b/makefile.targets
+index b357e0b..f73a03f 100644
+--- a/makefile.targets
++++ b/makefile.targets
+@@ -1,8 +1,7 @@
+ .PHONY: install
+ install:
+-	@mkdir -p /etc/siridb/
+-	@mkdir -p /var/lib/siridb/
+-	@cp -n ../siridb.conf /etc/siridb/siridb.conf
++	@mkdir -p $(INSTALL_PATH)/etc/siridb/
++	@cp -n ../siridb.conf $(INSTALL_PATH)/etc/siridb/siridb.conf
+ 	@cp siridb-server $(INSTALL_PATH)/bin/siridb-server
+ 
+ 
