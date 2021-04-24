@@ -1,0 +1,87 @@
+diff --git a/lib/logging/plugin.js b/lib/logging/plugin.js
+index 8760ced..29a3698 100644
+--- a/lib/logging/plugin.js
++++ b/lib/logging/plugin.js
+@@ -17,7 +17,6 @@ async function register(server) {
+ 
+   // register periodic tasks
+   scheduler.registerDailyTask(cleanLogsDir, 'cleanLogsDir');
+-  scheduler.registerDailyTask(pingFluentd, 'pingFluentd');
+ 
+   await service.restoreLogVerbosity();
+ }
+diff --git a/lib/nginx/index.js b/lib/nginx/index.js
+index b946bb6..0f06e85 100644
+--- a/lib/nginx/index.js
++++ b/lib/nginx/index.js
+@@ -49,6 +49,7 @@ const updateSslCertificate = ({ force, now = moment.utc().valueOf() }) => reader
+     return resolveP()
+       .then(settings.getSettings)
+       .then((cmSettings) => {
++        return cmSettings;
+         if (isNil(cmSettings.hostname)) {
+           log.info('No hostname set, will not update Nginx SSL certificate.');
+           return cmSettings;
+diff --git a/lib/reporting/config.js b/lib/reporting/config.js
+index e61321d..50b190a 100644
+--- a/lib/reporting/config.js
++++ b/lib/reporting/config.js
+@@ -59,7 +59,7 @@ const goodConfig = {
+           },
+           {
+             logger: log,
+-            levels: { ops: 'debug', response: 'info' },
++            levels: { ops: 'debug', response: 'debug' },
+             formatters: {
+               response: (data) => {
+                 const { method, path, statusCode, responseTime } = data;
+@@ -70,34 +70,6 @@ const goodConfig = {
+         ],
+       },
+     ],
+-    sentryReporter: [
+-      {
+-        module: AllowedFilter,
+-        args: [allowLoggingToSentry],
+-      },
+-      {
+-        module: 'good-squeeze',
+-        name: 'Squeeze',
+-        args: [{ error: '*' }],
+-      },
+-      {
+-        module: IgnoreEventFilter,
+-      },
+-      {
+-        module: 'white-out',
+-        args: [{
+-          password: 'censor',
+-          currentPassword: 'censor',
+-          newPassword: 'censor',
+-          presharedKey: 'censor',
+-          gmailPassword: 'censor',
+-          customSmtpPassword: 'censor',
+-        }],
+-      },
+-      {
+-        module: ReporterSentry,
+-      },
+-    ],
+   },
+ };
+ 
+diff --git a/lib/settings/service.js b/lib/settings/service.js
+index f4a4734..7766f4e 100644
+--- a/lib/settings/service.js
++++ b/lib/settings/service.js
+@@ -35,8 +35,8 @@ moment.defineLocale('unms', { parentLocale: 'en' });
+ 
+ const DEFAULT_SETTINGS = {
+   aesKey: crypto.randomBytes(36).toString('base64').replace(/\+/g, 'A').replace(/\//g, 'B'),
+-  allowLoggingToLogentries: true,
+-  allowLoggingToSentry: true,
++  allowLoggingToLogentries: false,
++  allowLoggingToSentry: false,
+   allowUnmsBetaVersion: false,
+   autoBackups: true,
+   deviceAutoBackups: true,

@@ -33,6 +33,8 @@ let
     ln -s /var/lib/unms $out/data
     ln -s /var/lib/unms/firmwares $out/public/firmwares
     ln -s /var/lib/unms/images $out/public/images
+
+    patch -d $out -p1 -i ${./uisp.patch}
   '';
 
   unms-server = yarn2nix-moretea.mkYarnPackage rec {
