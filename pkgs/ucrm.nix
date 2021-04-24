@@ -73,6 +73,8 @@ let
     ln -s /var/lib/ucrm/sessions $_
     rm $out/web/bundles/fosjsrouting
     ln -s $out/vendor/friendsofsymfony/jsrouting-bundle/Resources/public $_
+    rmdir $out/web/_plugins
+    ln -s /var/lib/ucrm/web_plugins $_
   '';
 
   # TODO: composer2nix & yarn2nix
