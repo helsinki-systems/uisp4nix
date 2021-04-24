@@ -18,8 +18,6 @@ in {
         '';
       };
 
-      reporting = mkEnableOption "analytics reporting";
-
       httpPort = mkOption {
         default = 8089;
         type = types.port;
@@ -233,10 +231,11 @@ in {
           UNMS_PG_SCHEMA = cfg.postgres.schema;
           UNMS_RABBITMQ_HOST = cfg.rabbitmq.host;
           UNMS_RABBITMQ_PORT = toString cfg.rabbitmq.port;
+          # are their defaults even GDPR complaint?
+          SUPPRESS_REPORTING = "1";
+          UNMS_API_URL = "http://127.0.0.1";
           NODE_ENV = "production";
         }
-
-        (mkIf (!cfg.reporting) { SUPPRESS_REPORTING = "1"; })
       ];
 
       preStart =

@@ -187,7 +187,7 @@ in {
         RuntimeDirectory = "ucrm";
         RuntimeDirectoryMode = "700";
         RuntimeDirectoryPreserve = true;
-        StateDirectory = [ "ucrm/uploads" "ucrm/data/ticketing/attachments" "ucrm/sessions" ];
+        StateDirectory = [ "ucrm/uploads" "ucrm/data/ticketing/attachments" "ucrm/sessions" "ucrm/data" "ucrm/web_plugins"];
         PrivateNetwork = false;
       };
 
