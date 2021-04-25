@@ -209,34 +209,32 @@ in {
       wantedBy = [ "multi-user.target" ];
       after = [ "network.target" ];
 
-      environment = mkMerge [
-        {
-          HOME = "%t/unms";
-          HTTP_PORT = toString cfg.httpPort;
-          HTTPS_PORT = toString cfg.httpsPort;
-          WS_PORT = toString cfg.wsPort;
-          PUBLIC_HTTP_PORT = toString cfg.publicHttpPort;
-          PUBLIC_HTTPS_PORT = toString cfg.publicHttpsPort;
-          PUBLIC_WS_PORT = toString cfg.publicWsPort;
-          NETFLOW_PORT = toString cfg.netflowPort;
-          UNMS_NETFLOW_PORT = toString cfg.netflowPort;
-          UNMS_REDISDB_HOST = cfg.redis.host;
-          UNMS_REDISDB_PORT = toString cfg.redis.port;
-          UNMS_REDISDB_DB = toString cfg.redis.db;
-          UNMS_FLUENTD_HOST = cfg.fluentd.host;
-          UNMS_FLUENTD_PORT = toString cfg.fluentd.port;
-          UNMS_PG_HOST = cfg.postgres.host;
-          UNMS_PG_PORT = toString cfg.postgres.port;
-          UNMS_PG_USER = cfg.postgres.user;
-          UNMS_PG_SCHEMA = cfg.postgres.schema;
-          UNMS_RABBITMQ_HOST = cfg.rabbitmq.host;
-          UNMS_RABBITMQ_PORT = toString cfg.rabbitmq.port;
-          # are their defaults even GDPR complaint?
-          SUPPRESS_REPORTING = "1";
-          UNMS_API_URL = "http://127.0.0.1";
-          NODE_ENV = "production";
-        }
-      ];
+      environment = {
+        HOME = "%t/unms";
+        HTTP_PORT = toString cfg.httpPort;
+        HTTPS_PORT = toString cfg.httpsPort;
+        WS_PORT = toString cfg.wsPort;
+        PUBLIC_HTTP_PORT = toString cfg.publicHttpPort;
+        PUBLIC_HTTPS_PORT = toString cfg.publicHttpsPort;
+        PUBLIC_WS_PORT = toString cfg.publicWsPort;
+        NETFLOW_PORT = toString cfg.netflowPort;
+        UNMS_NETFLOW_PORT = toString cfg.netflowPort;
+        UNMS_REDISDB_HOST = cfg.redis.host;
+        UNMS_REDISDB_PORT = toString cfg.redis.port;
+        UNMS_REDISDB_DB = toString cfg.redis.db;
+        UNMS_FLUENTD_HOST = cfg.fluentd.host;
+        UNMS_FLUENTD_PORT = toString cfg.fluentd.port;
+        UNMS_PG_HOST = cfg.postgres.host;
+        UNMS_PG_PORT = toString cfg.postgres.port;
+        UNMS_PG_USER = cfg.postgres.user;
+        UNMS_PG_SCHEMA = cfg.postgres.schema;
+        UNMS_RABBITMQ_HOST = cfg.rabbitmq.host;
+        UNMS_RABBITMQ_PORT = toString cfg.rabbitmq.port;
+        # are their defaults even GDPR complaint?
+        SUPPRESS_REPORTING = "1";
+        UNMS_API_URL = "http://127.0.0.1";
+        NODE_ENV = "production";
+      };
 
       preStart =
         let
@@ -324,6 +322,8 @@ in {
           /var/lib/secrets/unms/* r,
         '';
       };
+
+      stopIfChanged = false;
     };
 
     systemd.services.siridb = let
