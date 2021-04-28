@@ -1,4 +1,4 @@
-{ stdenv, stdenvNoCC, runCommandNoCC, fetchurl, dockerTools, nodejs, nodePackages, python3, yarn, yarn2nix-moretea, writeTextFile, pkgconfig, vips, pkgs }:
+{ stdenv, stdenvNoCC, runCommandNoCC, fetchurl, dockerTools, nodejs, nodePackages, python3, yarn, yarn2nix-moretea, writeTextFile, pkg-config, vips, pkgs }:
 
 let
   # nix run nixpkgs.skopeo -c skopeo --override-os linux --override-arch x86_64 inspect docker://docker.io/ubnt/unms:1.3.10 | jq -r '.Digest'
@@ -62,7 +62,7 @@ let
         '';
       };
       sharp = {
-        buildInputs = nodeGypRebuildPkg.buildInputs ++ [ pkgconfig vips ] ++ vips.buildInputs;
+        buildInputs = nodeGypRebuildPkg.buildInputs ++ [ pkg-config vips ] ++ vips.buildInputs;
         postInstall = ''
           ${nodeGypRebuildPkg.postInstall}
           node install/dll-copy
