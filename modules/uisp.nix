@@ -4,7 +4,7 @@ with lib;
 
 let
   cfg = config.services.uisp;
-  unms = pkgs.callPackage ../pkgs/uisp.nix { };
+  unms = pkgs.callPackage ../pkgs/uisp.nix { nodejs = pkgs.nodejs-12_x; };
 in {
   options = {
     services.uisp = {
@@ -289,12 +289,12 @@ in {
           ${waitForHost cfg.redis "Redis"}
 
           ${exportSecrets}
-          exec ${pkgs.nodejs}/bin/node ${cfg.package}/libexec/unms-server/node_modules/unms-server/cli/migrate.js up
+          exec ${pkgs.nodejs-12_x}/bin/node ${cfg.package}/libexec/unms-server/node_modules/unms-server/cli/migrate.js up
         '';
 
       script = ''
         ${exportSecrets}
-        exec ${pkgs.nodejs}/bin/node ${cfg.package}/libexec/unms-server/node_modules/unms-server/index.js
+        exec ${pkgs.nodejs-12_x}/bin/node ${cfg.package}/libexec/unms-server/node_modules/unms-server/index.js
       '';
 
       serviceConfig = rec {
@@ -306,6 +306,8 @@ in {
         StateDirectory = "unms";
         WorkingDirectory = "%t/unms";
         PrivateNetwork = false;
+
+        MemoryDenyWriteExecute = false;
       };
 
       sandbox = 2;
@@ -318,6 +320,7 @@ in {
 
           @{PROC}@{pid}/stat r,
           @{PROC}/loadavg r,
+          @{PROC}/uptime r,
 
           /var/lib/secrets/unms/* r,
         '';
