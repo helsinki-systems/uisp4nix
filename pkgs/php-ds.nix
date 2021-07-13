@@ -15,9 +15,7 @@ php.buildPecl rec {
     pcre2
   ];
 
-  internalDeps = with php.extensions; [
-    json
-  ];
+  internalDeps = lib.optional (lib.versionOlder php.version "8") php.extensions.json;
 
   meta = with lib; {
     description = "An extension providing efficient data structures for PHP 7";
