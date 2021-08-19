@@ -1,4 +1,4 @@
-{ stdenv, stdenvNoCC, runCommandNoCC, fetchurl, dockerTools, nodejs, nodePackages, python3, yarn, yarn2nix-moretea, writeTextFile, pkg-config, vips, pkgs }:
+{ stdenv, stdenvNoCC, runCommand, fetchurl, dockerTools, nodejs, nodePackages, python3, yarn, yarn2nix-moretea, writeTextFile, pkg-config, vips, pkgs }:
 
 let
   # nix run nixpkgs.skopeo -c skopeo --override-os linux --override-arch x86_64 inspect docker://docker.io/ubnt/unms:1.3.10 | jq -r '.Digest'
@@ -13,7 +13,7 @@ let
   };
 
   # FIXME: https://github.com/NixOS/nixpkgs/pull/80068
-  unmsServerSrc = runCommandNoCC "unms-server-src" {} ''
+  unmsServerSrc = runCommand "unms-server-src" {} ''
     mkdir $out
     tar xf ${dockerTools.runWithOverlay {
       name = "unms-app-${version}-src";

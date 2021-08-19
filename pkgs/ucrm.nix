@@ -1,4 +1,4 @@
-{ stdenv, runCommandNoCC, dockerTools, php, callPackage }:
+{ stdenv, runCommand, dockerTools, php, callPackage }:
 
 let
   # nix run nixpkgs.skopeo -c skopeo --override-os linux --override-arch x86_64 inspect docker://docker.io/ubnt/unms-crm:3.3.11 | jq -r '.Digest'
@@ -21,7 +21,7 @@ let
   };
 
   # FIXME: https://github.com/NixOS/nixpkgs/pull/80068
-  ucrmSrc = runCommandNoCC "ucrm-src" rec {
+  ucrmSrc = runCommand "ucrm-src" rec {
     buildInputs = [ phpEnv ];
   } ''
     mkdir $out
